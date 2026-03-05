@@ -1,0 +1,40 @@
+<div class="container mt-4">
+  <button class="btn btn-outline-secondary mb-3" routerLink="/busqueda">← Volver</button>
+
+  <div *ngIf="loading" class="alert alert-info">Cargando...</div>
+  <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+
+  <div *ngIf="carta" class="row">
+    <div class="col-md-4 text-center">
+      <img [src]="getCardImg(carta.image)" (error)="onImgError($event)"
+           class="img-fluid rounded shadow" style="max-width: 300px;" />
+    </div>
+
+    <div class="col-md-8">
+      <h2>{{carta.name}}</h2>
+      <p class="text-muted">{{carta.id}}</p>
+
+      <table class="table table-bordered">
+        <tbody>
+          <tr *ngIf="carta.hp">
+            <th>HP</th><td>{{ carta.hp }}</td>
+          </tr>
+          <tr *ngIf="carta.types?.length">
+            <th>Tipo</th><td>{{carta.types.join(', ')}}</td>
+          </tr>
+          <tr *ngIf="carta.rarity">
+            <th>Rareza</th><td>{{carta.rarity}}</td>
+          </tr>
+          <tr *ngIf="carta.illustrator">
+            <th>Ilustrador</th><td>{{carta.illustrator}}</td>
+          </tr>
+          <tr *ngIf="carta.pricing?.cardmarket?.trend">
+            <th>Precio (trend)</th><td>{{carta.pricing.cardmarket.trend}} €</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- RECORDATORIO: Falta por añadir ataques de los pokemon -->
+    </div>
+  </div>
+</div>
