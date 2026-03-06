@@ -1,5 +1,5 @@
 <div class="container mt-4">
-  <button class="btn btn-outline-secondary mb-3" routerLink="/busqueda">← Volver</button>
+<button class="btn btn-outline-secondary mb-3" (click)="volver()">← Volver</button>
 
   <div *ngIf="loading" class="alert alert-info">Cargando...</div>
   <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
@@ -34,7 +34,26 @@
         </tbody>
       </table>
 
-      <!-- RECORDATORIO: Falta por añadir ataques de los pokemon -->
+      <div *ngIf="carta.attacks?.length" class="mt-4">
+  <h4>Ataques</h4>
+  <div class="row g-3">
+    <div class="col-md-6" *ngFor="let atk of carta.attacks">
+      <div class="card h-100 border-0 shadow-sm">
+        <div class="card-body">
+          <h6 class="card-title mb-1">{{ atk.name }}</h6>
+          <p class="text-muted small mb-2">
+            <strong>Coste:</strong> {{ atk.cost?.join(', ') || '-' }}
+          </p>
+          <p class="mb-1">
+            <strong>Daño:</strong> {{ atk.damage || '-' }}
+          </p>
+          <p class="text-muted small mb-0">{{ atk.effect || '-' }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
     </div>
   </div>
 </div>

@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CartaResumen, TcgdexRestService } from '../tcgdex-rest.service';
 import { forkJoin } from 'rxjs';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
   selector: 'app-busqueda',
@@ -8,7 +9,7 @@ import { forkJoin } from 'rxjs';
   templateUrl: './busqueda.component.html',
   styleUrl: './busqueda.component.css'
 })
-export class BusquedaComponent {
+export class BusquedaComponent implements OnInit{
   q = '';
   lang: 'es'|'en'= 'es';
 
@@ -23,8 +24,21 @@ export class BusquedaComponent {
   resultados:CartaResumen[]=[]; //array con resultados
   detallesConPrecio:any[]=[]; //array con los detalles de cada carta incluido precios
 
-  constructor(private tcgdexRest: TcgdexRestService) {}
+  constructor(private tcgdexRest: TcgdexRestService,
+    private router: Router, // se usa para actualizar la URL
+    private route: ActivatedRoute //se usa para leer queryParams
+  ) {}
 
+  ngOnInit() {
+    // lee queryParams al cargar la página
+    this.route.queryParams.subscribe(params => {
+      if (params['q']) {
+        this.q = params['q'];
+        this.pagina = +params['pagina'] || 1;
+        this.buscar();
+      }
+    });
+  }
   //la calidad de la imagen la dejamos en baja
   getCardImg(
   urlBase?: string,
@@ -119,11 +133,24 @@ export class BusquedaComponent {
       this.error='Error consultando TCGdex';
       this.loading=false;
     }
+    
   });
+  this.router.navigate([], {
+    relativeTo: this.route,
+    queryParams: { q: this.q, pagina: this.pagina },
+    queryParamsHandling: 'merge'
+  }); 
 }
 
   onImgError(ev: Event) {
     const img = ev.target as HTMLImageElement;
     img.src = 'assets/no-image.jpg';
   }
+
+  verDetalle(id: string) {
+  //navegamos a la carta pasando el estado actual de búsqueda
+  this.router.navigate(['/carta', id], {
+    state: { q: this.q, pagina: this.pagina }
+  });
+}
 }

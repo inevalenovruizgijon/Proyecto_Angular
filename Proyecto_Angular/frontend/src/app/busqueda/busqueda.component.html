@@ -20,7 +20,10 @@
       <div class="fw-semibold">{{ c.name }}</div>
       <!-- <div class="text-muted small">{{ c.id }}</div> -->
     </div>
-    <a [routerLink]="['/carta', c.id]" class="text-decoration-none">Ver detalles</a>
+    <div style="min-width: 150px;">
+      <div class="text small">{{ c.set?.name ?? 'Sin expansión' }}</div>
+    </div>
+  <a (click)="verDetalle(c.id)" class="text-decoration-none" style="margin-right: 15px">Ver detalles</a>
 
     <div class="text-end" style="min-width: 110px;">
       {{c.pricing?.cardmarket?.trend ?? 'N/A'}} €

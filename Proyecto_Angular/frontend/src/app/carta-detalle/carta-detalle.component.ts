@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { TcgdexRestService } from '../tcgdex-rest.service';
 
 @Component({
@@ -15,7 +15,8 @@ export class CartaDetalleComponent implements OnInit {
 
   constructor(
     private route: ActivatedRoute,       //para leer el parámetro :id de la URL
-    private tcgdexRest: TcgdexRestService //servicio para llamar a la API
+    private tcgdexRest: TcgdexRestService, //servicio para llamar a la API
+    private router:Router
   ) {}
 
   ngOnInit() {
@@ -48,4 +49,13 @@ export class CartaDetalleComponent implements OnInit {
     const img=ev.target as HTMLImageElement;
     img.src='assets/no-image.jpg';
   }
+  volver() {
+  //volvemos a busqueda manteniendo los queryParams que venían en la URL anterior
+  this.router.navigate(['/busqueda'], {
+    queryParams: {
+      q: history.state?.q || '',
+      pagina: history.state?.pagina || 1
+    }
+  });
+}
 }
