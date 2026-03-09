@@ -34,6 +34,7 @@
         </tbody>
       </table>
 
+      <button class="btn mt-2"[ngClass]="enColeccion ? 'btn-danger' : 'btn-success'" (click)="toggleColeccion()">{{ enColeccion ? 'Quitar de colección' : 'Añadir a colección' }}</button>
       <div *ngIf="carta.attacks?.length" class="mt-4">
   <h4>Ataques</h4>
   <div class="row g-3">

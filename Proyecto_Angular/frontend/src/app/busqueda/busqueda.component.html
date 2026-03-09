@@ -23,7 +23,7 @@
     <div style="min-width: 150px;">
       <div class="text small">{{ c.set?.name ?? 'Sin expansión' }}</div>
     </div>
-  <a (click)="verDetalle(c.id)" class="text-decoration-none" style="margin-right: 15px">Ver detalles</a>
+  <button (click)="verDetalle(c.id)" class="btn btn-outline-primary btn-sm">Ver detalles</button>
 
     <div class="text-end" style="min-width: 110px;">
       {{c.pricing?.cardmarket?.trend ?? 'N/A'}} €

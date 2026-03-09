@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TcgdexRestService } from '../tcgdex-rest.service';
+import { ColeccionService } from '../coleccion.service';
 
 @Component({
   selector: 'app-carta-detalle',
@@ -12,11 +13,12 @@ export class CartaDetalleComponent implements OnInit {
   carta: any=null;  //objeto con los datos de la carta
   loading=true;     //controla el estado de carga
   error: string | null=null; //mensaje de error si falla la petición
-
+  enColeccion = false;
   constructor(
     private route: ActivatedRoute,       //para leer el parámetro :id de la URL
     private tcgdexRest: TcgdexRestService, //servicio para llamar a la API
-    private router:Router
+    private router:Router,
+    private coleccionService: ColeccionService
   ) {}
 
   ngOnInit() {
@@ -57,5 +59,29 @@ export class CartaDetalleComponent implements OnInit {
       pagina: history.state?.pagina || 1
     }
   });
+}
+comprobarColeccion() {
+  this.coleccionService.getColeccion().subscribe({
+    next:(coleccion)=>{
+      this.enColeccion=coleccion.some(c=>c.carta_id==this.carta?.id);
+    }
+  });
+}
+
+toggleColeccion() {
+  if(this.enColeccion) {
+    this.coleccionService.eliminar(this.carta.id).subscribe({
+      next:()=>this.enColeccion=false
+    });
+  } else {
+      this.coleccionService.añadir({
+      carta_id:this.carta.id,
+      nombre:this.carta.name,
+      imagen:this.carta.image,
+      precio:this.carta.pricing?.cardmarket?.trend ?? null
+    }).subscribe({
+      next:()=>this.enColeccion = true
+    });
+  }
 }
 }
