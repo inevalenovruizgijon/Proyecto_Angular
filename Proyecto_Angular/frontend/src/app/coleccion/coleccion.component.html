@@ -1,25 +1,79 @@
-<h2>Mi colección</h2>
+<div class="container mt-4">
+  <h1 class="text-center mb-4">Top 10 cartas más caras</h1>
 
-<div *ngIf="loading" class="alert alert-info">Cargando...</div>
-<div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+  <!-- Spinner de carga: visible mientras se consulta la API del mercado -->
+  <!-- spinner-border es el componente de Bootstrap para animaciones de carga -->
+  <div *ngIf="loading" class="text-center my-5">
+    <div class="spinner-border text-primary" role="status"></div>
+    <p>Consultando el mercado...</p>
+  </div>
 
-<div *ngIf="!loading && coleccion.length === 0" class="alert alert-warning">
-  No tienes cartas en tu colección todavía.
+  <!-- Mensaje de error: visible si la petición al backend Laravel falla -->
+  <div *ngIf="error" class="alert alert-danger">
+    {{ error }}
+  </div>
+
+  <!-- Contenido principal: solo visible cuando ha terminado de cargar y hay cartas -->
+  <div *ngIf="!loading && topCartas.length > 0">
+
+    <div class="row row-cols-1 row-cols-md-2 g-4">
+
+      <!-- *ngFor recorre el array topCartas creando una tarjeta por carta -->
+      <div class="col" *ngFor="let carta of topCartas; let i = index">
+
+        <!-- Tarjeta clickable: al hacer clic navega al detalle de la carta -->
+        <div class="card h-100 shadow-sm border-0" (click)="verDetalle(carta.id)" style="cursor: pointer;">
+          <div class="row g-0 align-items-center">
+
+            <!-- Columna izquierda: imagen de la carta -->
+            <div class="col-4 p-2 text-center">
+              <img [src]="carta.image" class="img-fluid rounded" alt="{{ carta.name }}">
+            </div>
+
+            <!-- Columna derecha: datos de la carta -->
+            <div class="col-8">
+              <div class="card-body">
+
+                <span class="badge bg-warning text-dark mb-2">#{{ i + 1 }}</span>
+
+                <!-- Nombre de la carta -->
+                <h5 class="card-title">{{ carta.name }}</h5>
+
+                <!-- Precio formateado como moneda -->
+                <p class="card-text text-success fw-bold">
+                  {{ carta.precio_final | currency:'EUR':'symbol':'1.2-2' }}
+                </p>
+
+                <!-- Enlace a Cardmarket: solo visible si la carta tiene URL de mercado -->
+                <a *ngIf="carta.cardmarket" 
+                   [href]="carta.cardmarket" 
+                   target="_blank" 
+                   class="btn btn-sm btn-outline-secondary mt-1"
+                   (click)="$event.stopPropagation()">
+                  Ver en Cardmarket
+                </a>
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gráfico de barras comparando los precios del Top 10 -->
+  <div class="card shadow mb-5 p-3">
+    <canvas baseChart
+      [data]="barChartData"
+      [options]="barChartOptions"
+      [type]="barChartType">
+    </canvas>
+  </div>
+
+  <!-- Mensaje cuando no hay cartas con precio disponible -->
+  <!-- Se muestra solo si terminó de cargar, no hay error, pero el array está vacío -->
+  <div *ngIf="!loading && !error && topCartas.length === 0" class="text-center text-muted mt-5">
+    <p>No se encontraron cartas con precio disponible.</p>
+  </div>
+
 </div>
-
-<ul class="list-group" *ngIf="coleccion.length">
-  <li class="list-group-item d-flex align-items-center gap-3" *ngFor="let c of coleccion">
-    <img [src]="getCardImg(c.imagen)" width="70" (error)="onImgError($event)" />
-
-    <div class="flex-grow-1">
-      <div class="fw-semibold">{{ c.nombre }}</div>
-    </div>
-
-    <button (click)="verDetalle(c.carta_id)" class="btn btn-primary btn-sm">Ver detalles</button>
-    <div class="text-end me-3" style="min-width: 110px;">
-      {{ c.precio ?? 'N/A' }} €
-    </div>
-
-    <button class="btn btn-danger btn-sm" (click)="eliminar(c.carta_id)">Quitar</button>
-  </li>
-</ul>

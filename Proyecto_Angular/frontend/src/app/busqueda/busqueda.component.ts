@@ -9,28 +9,25 @@ import { ActivatedRoute, Router } from '@angular/router';
   templateUrl: './busqueda.component.html',
   styleUrl: './busqueda.component.css'
 })
-export class BusquedaComponent implements OnInit{
+export class BusquedaComponent implements OnInit {
+
   q = '';
-  lang: 'es'|'en'= 'es';
+  lang: 'es' | 'en' = 'es';
+  loading = false;
+  error: string | null = null;
+  pagina = 1;
+  paginaTamano = 24;
+  hayMasResultados = true;
+  resultados: CartaResumen[] = [];
+  detallesConPrecio: any[] = [];
 
-  loading=false;
-  error: string| null = null;
-
-  pagina=1;
-  paginaTamano=24;
-
-  hayMasResultados=true;
-
-  resultados:CartaResumen[]=[]; //array con resultados
-  detallesConPrecio:any[]=[]; //array con los detalles de cada carta incluido precios
-
-  constructor(private tcgdexRest: TcgdexRestService,
-    private router: Router, // se usa para actualizar la URL
-    private route: ActivatedRoute //se usa para leer queryParams
+  constructor(
+    private tcgdexRest: TcgdexRestService, // Único servicio necesario
+    private router: Router,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit() {
-    // lee queryParams al cargar la página
     this.route.queryParams.subscribe(params => {
       if (params['q']) {
         this.q = params['q'];
@@ -39,118 +36,118 @@ export class BusquedaComponent implements OnInit{
       }
     });
   }
-  //la calidad de la imagen la dejamos en baja
-  getCardImg(
-  urlBase?: string,
-  quality: 'low' | 'high'='low',
-  ext: 'webp' | 'png' | 'jpg'='webp'
-): string {
-  if (!urlBase) return 'assets/no-image.jpg'; // si no hay url, imagen por defecto
-  return `${urlBase}/${quality}.${ext}`;
-}
 
-  buscarNueva(){
-    this.pagina=1;
-    this.hayMasResultados=true;
+  anadirAFavoritos(carta: any) {
+    const urlBase = carta.image 
+      ?? carta.images?.small 
+      ?? carta.images?.standard 
+      ?? null;
+
+    const datosParaLaravel = {
+      id: carta.id,
+      name: carta.name,
+      imagen: urlBase ? this.getCardImg(urlBase, 'low', 'webp') : null,
+      precio_final: carta.pricing?.cardmarket?.trend ?? 0
+    };
+
+    console.log("Enviando a favoritos:", datosParaLaravel);
+
+    // CORRECCIÓN: Ahora usamos tcgdexRest, que es el servicio unificado
+    this.tcgdexRest.addFavorito(datosParaLaravel).subscribe({
+      next: () => alert(`¡${carta.name} añadida a favoritos!`),
+      error: (err) => {
+        console.error("Error de Laravel:", err);
+        alert('Error al guardar en la base de datos');
+      }
+    });
+  }
+
+  getCardImg(urlBase?: string, quality: 'low' | 'high' = 'low', ext: 'webp' | 'png' | 'jpg' = 'webp'): string {
+    if (!urlBase) return 'assets/no-image.jpg';
+    return `${urlBase}/${quality}.${ext}`;
+  }
+
+  buscarNueva() {
+    this.pagina = 1;
+    this.hayMasResultados = true;
     this.buscar();
   }
 
-  paginaSiguiente(){
-    //si no hay más resultados, no dejamos avanzar
+  paginaSiguiente() {
     if (this.loading || !this.hayMasResultados) return;
-    //cada vez que se le de al botón de página siguiente, se le sumará 1 a la página actual y se hara otra petición a la api
     this.pagina++;
     this.buscar();
   }
 
-  paginaAnterior(){ //cada vez que se le de al botón de página anterior, se restara - a la pagina actual y se hara otra petición de busqueda a la api
+  paginaAnterior() {
     if (this.loading) return;
-
-    if (this.pagina > 1){
+    if (this.pagina > 1) {
       this.pagina--;
       this.buscar();
     }
   }
 
-  //metodo que se llamará cuando el usuario pulse el botón de buscar
-  buscar(){
-  const value = this.q.trim();
+  buscar() {
+    const value = this.q.trim();
+    if (value.length < 2) {
+      this.resultados = [];
+      this.detallesConPrecio = [];
+      this.loading = false;
+      return;
+    }
 
-  //si la longitud del texto es muy corta,no se enviará nada
-  if (value.length < 2){
-    this.resultados=[];
-    this.detallesConPrecio=[];
-    this.error =null;
-    this.loading=false;
-    this.pagina= 1;
+    this.loading = true;
+    this.error = null;
+    this.detallesConPrecio = [];
 
-    this.hayMasResultados= true;
-    return;
+    this.tcgdexRest.buscarPorNombre(value, this.lang, this.pagina, this.paginaTamano + 1).subscribe({
+      next: (res) => {
+        this.hayMasResultados = res.length > this.paginaTamano;
+        this.resultados = res.slice(0, this.paginaTamano);
+
+        if (this.resultados.length === 0) {
+          this.error = 'No se encontraron resultados.';
+          this.loading = false;
+          return;
+        }
+
+        // Aquí usamos forkJoin para pedir los detalles de las 24 cartas a la vez
+        forkJoin(this.resultados.map(c => this.tcgdexRest.getCartaDetalle(c.id, this.lang))).subscribe({
+          next: (detalles) => {
+            // Ordenación de precios: menor a mayor
+            this.detallesConPrecio = detalles.sort((a, b) => {
+              const pa = a?.pricing?.cardmarket?.trend ?? Number.POSITIVE_INFINITY;
+              const pb = b?.pricing?.cardmarket?.trend ?? Number.POSITIVE_INFINITY;
+              return pa - pb;
+            });
+            this.loading = false;
+          },
+          error: () => {
+            this.error = 'Error cargando detalles';
+            this.loading = false;
+          }
+        });
+      },
+      error: () => {
+        this.error = 'Error en el servidor TCGdex';
+        this.loading = false;
+      }
+    });
+
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { q: this.q, pagina: this.pagina },
+      queryParamsHandling: 'merge'
+    });
   }
 
-  this.loading =true;
-  this.error =null;
-  this.detallesConPrecio= [];
-
-  // Pedimos paginaTamano + 1 para saber si hay más resultados sin cargar una página vacía
-  this.tcgdexRest.buscarPorNombre(value, this.lang, this.pagina, this.paginaTamano + 1).subscribe({
-    next: (res)=>{
-
-      //si nos devuelve más de paginaTamano, hay más páginas
-      this.hayMasResultados = res.length > this.paginaTamano;
-
-      //pero solo mostramos paginaTamano cartas
-      this.resultados = res.slice(0,this.paginaTamano);
-
-      if (this.resultados.length == 0) {
-        this.detallesConPrecio =[];
-        this.error ='No hemos encontrado resultados para tu búsqueda.';
-        this.loading=false;
-        return;
-      }
-
-      //hace una llamada al servicio para que aparezca una página con 24 resultados
-      forkJoin(this.resultados.map(c => this.tcgdexRest.getCartaDetalle(c.id, this.lang))).subscribe({
-        next: (detalles) => {
-          //se ordena por el trend, que es el precio, en este caso esta de menor a mayor
-          //y después irán los son null
-          console.log(detalles);
-          this.detallesConPrecio = detalles.sort((a, b) => {
-            const pa = a?.pricing?.cardmarket?.trend ?? Number.POSITIVE_INFINITY;
-            const pb = b?.pricing?.cardmarket?.trend ?? Number.POSITIVE_INFINITY;
-            return pa - pb;
-          });
-
-          this.loading = false;
-        },
-        error:()=>{
-          this.error='Error cargando cartas';
-          this.loading=false;
-        }
-      });
-    },
-    error: ()=>{
-      this.error='Error consultando TCGdex';
-      this.loading=false;
-    }
-    
-  });
-  this.router.navigate([], {
-    relativeTo: this.route,
-    queryParams: { q: this.q, pagina: this.pagina },
-    queryParamsHandling: 'merge'
-  }); 
-}
-
   onImgError(ev: Event) {
-    const img = ev.target as HTMLImageElement;
-    img.src = 'assets/no-image.jpg';
+    (ev.target as HTMLImageElement).src = 'assets/no-image.jpg';
   }
 
   verDetalle(id: string) {
-  //navegamos a la carta pasando el estado actual de búsqueda
-  this.router.navigate(['/carta', id], {
-    state: { q: this.q, pagina: this.pagina }
-  });
-}
+    this.router.navigate(['/carta', id], {
+      state: { q: this.q, pagina: this.pagina }
+    });
+  }
 }

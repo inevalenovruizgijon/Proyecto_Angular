@@ -1,5 +1,9 @@
+<!-- Barra de navegación fija en la parte superior de la pantalla -->
+<!-- fixed-top hace que se quede pegada arriba aunque el usuario haga scroll -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
   <div class="container-fluid">
+
+    <!-- título de la app: al hacer clic navega a la página principal -->
     <a class="navbar-brand" routerLink="/">Cartas Pokémon</a>
 
     <button class="navbar-toggler" type="button"
@@ -10,24 +14,33 @@
 
     <div class="collapse navbar-collapse" id="mainNav">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+
+       
         <li class="nav-item">
           <a class="nav-link" routerLink="/busqueda" routerLinkActive="active">Búsqueda</a>
         </li>
+
+        <!-- Enlace al Top 10 de cartas más caras (datos de tu backend Laravel) -->
         <li class="nav-item">
-          <a class="nav-link" routerLink="/coleccion" routerLinkActive="active">Mi colección</a>
+          <a class="nav-link" routerLink="/coleccion" routerLinkActive="active">Top 10 cartas más caras</a>
         </li>
+
+        <!-- Enlace a la lista de cartas guardadas como favoritos en MySQL -->
         <li class="nav-item">
-          <a class="nav-link" routerLink="/stats" routerLinkActive="active">Estadísticas</a>
+          <a class="nav-link" routerLink="/favoritos" routerLinkActive="active">Favoritos</a>
         </li>
+
       </ul>
     </div>
   </div>
 </nav>
 
+<!-- Contenedor principal donde Angular renderiza el componente de la ruta activa -->
 <div class="container" style="padding-top: 80px;">
   <router-outlet></router-outlet>
 </div>
 
+<!-- Pie de página con copyright -->
 <footer class="border-top py-3 mt-4">
   <div class="container">
     <small class="text-muted">Iaroslav Nevalenov&copy;</small>

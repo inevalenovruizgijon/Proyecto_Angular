@@ -2,10 +2,17 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Coleccion extends Model
 {
-    //
-    protected $fillable = ['carta_id','nombre','imagen','precio'];
+    use HasFactory;
+    protected $table = 'coleccions'; 
+    protected $fillable = [
+        'carta_id', 
+        'nombre', 
+        'imagen', 
+        'precio'
+    ];
 }

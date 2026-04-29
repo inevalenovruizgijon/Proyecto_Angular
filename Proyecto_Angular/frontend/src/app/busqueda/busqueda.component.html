@@ -1,39 +1,74 @@
-<h2>Búsqueda de cartas</h2>
+<div class="container mt-3">
+  <h2>Búsqueda de cartas</h2>
 
-<div class="d-flex gap-2 mb-3">
-  <input class="form-control" [(ngModel)]="q" placeholder="Ej: Pikachu" />
-  <button class="btn btn-primary" (click)="buscarNueva()">Buscar</button>
-</div>
+  <!-- Barra de búsqueda -->
+  <div class="d-flex gap-2 mb-3">
+    <input class="form-control" [(ngModel)]="q" (keyup.enter)="buscarNueva()" placeholder="Ej: Pikachu" />
+    <button class="btn btn-primary" (click)="buscarNueva()">Buscar</button>
+  </div>
 
-<div *ngIf="loading" class="alert alert-info">Cargando...</div>
-<div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+  <!-- Mensaje de carga: solo visible mientras loading sea true -->
+  <div *ngIf="loading" class="alert alert-info">Cargando...</div>
 
-<h5 *ngIf="resultados.length">Resultados</h5>
-<div *ngIf="!loading && !error && resultados.length == 0" class="alert alert-warning">
-  No hay resultados.
-</div>
+  <!-- Mensaje de error: solo visible si hay algún error (error != null) -->
+  <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
 
-<ul class="list-group" *ngIf="detallesConPrecio.length">
-  <li class="list-group-item d-flex align-items-center gap-3" *ngFor="let c of detallesConPrecio">
-<img [src]="getCardImg(c.image)" width="70" (error)="onImgError($event)" />
-    <div class="flex-grow-1">
-      <div class="fw-semibold">{{ c.name }}</div>
-      <!-- <div class="text-muted small">{{ c.id }}</div> -->
-    </div>
-    <div style="min-width: 150px;">
-      <div class="text small">{{ c.set?.name ?? 'Sin expansión' }}</div>
-    </div>
-  <button (click)="verDetalle(c.id)" class="btn btn-outline-primary btn-sm">Ver detalles</button>
+  <!-- Título de resultados: solo aparece si hay cartas en la lista -->
+  <h5 *ngIf="resultados.length">Resultados</h5>
+  
+  <!-- Aviso de sin resultados: se muestra cuando no está cargando, no hay error y la lista está vacía -->
+  <div *ngIf="!loading && !error && resultados.length == 0" class="alert alert-warning">
+    No hay resultados.
+  </div>
 
-    <div class="text-end" style="min-width: 110px;">
-      {{c.pricing?.cardmarket?.trend ?? 'N/A'}} €
-    </div>
-  </li>
-</ul>
+  <ul class="list-group shadow-sm" *ngIf="detallesConPrecio.length">
 
-<div class="d-flex justify-content-center gap-2 mt-3" *ngIf="resultados.length">
-  <button *ngIf="pagina > 1" class="btn btn-outline-primary" (click)="paginaAnterior()">Anterior</button>
-  <span class="align-self-center">Página {{pagina}}</span>
+    <li class="list-group-item d-flex align-items-center gap-3 p-3" *ngFor="let c of detallesConPrecio">
+      
+      <!-- Imagen de la carta -->
+      <img [src]="getCardImg(c.image)" width="70" (error)="onImgError($event)" class="rounded shadow-sm" />
+      
+      <!-- Nombre y expansión de la carta -->
+      <div class="flex-grow-1">
+        <div class="fw-semibold">{{ c.name }}</div>
+        <div class="text-muted small">{{ c.set?.name ?? 'Sin expansión' }}</div>
+      </div>
 
-  <button class="btn btn-outline-primary" *ngIf="hayMasResultados" (click)="paginaSiguiente()" [disabled]="loading">Siguiente</button>
+      <!-- Botón para ir a la página de detalle de la carta -->
+      <button (click)="verDetalle(c.id)" class="btn btn-outline-primary btn-sm">
+        Ver detalles
+      </button>
+
+      <!-- Botón para guardar la carta en favoritos en tu base de datos Laravel -->
+      <button (click)="anadirAFavoritos(c)" class="btn btn-warning btn-sm">
+        Añadir a favoritos
+      </button>
+
+      <!-- Precio de la carta en euros -->
+      <div class="text-end fw-bold text-success" style="min-width: 110px;">
+        {{ (c.pricing?.cardmarket?.trend) ? (c.pricing.cardmarket.trend | currency:'EUR') : 'N/A' }}
+      </div>
+
+    </li>
+  </ul>
+
+  <!-- Controles de paginación: solo visibles si hay resultados -->
+  <div class="d-flex justify-content-center gap-3 mt-4 mb-5" *ngIf="resultados.length">
+
+    <!-- Botón anterior: solo aparece si no estamos en la primera página -->
+    <button *ngIf="pagina > 1" class="btn btn-outline-primary" (click)="paginaAnterior()">
+      &laquo; Anterior
+    </button>
+    
+    <!-- Indicador de página actual -->
+    <span class="align-self-center fw-bold">Página {{pagina}}</span>
+
+    <button class="btn btn-outline-primary" 
+            *ngIf="hayMasResultados" 
+            (click)="paginaSiguiente()" 
+            [disabled]="loading">
+      Siguiente &raquo;
+    </button>
+
+  </div>
 </div>

@@ -1,59 +1,106 @@
 <div class="container mt-4">
-<button class="btn btn-outline-secondary mb-3" (click)="volver()">← Volver</button>
+
+  <!-- Botón para volver a la búsqueda, recuperando el texto y página anteriores -->
+  <button class="btn btn-outline-secondary mb-3" (click)="volver()">← Volver</button>
 
   <div *ngIf="loading" class="alert alert-info">Cargando...</div>
+
+  <!-- Mensaje de error: visible si la petición a la API falla -->
   <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
 
   <div *ngIf="carta" class="row">
+
+   
     <div class="col-md-4 text-center">
+      <!-- [src] enlaza dinámicamente la URL construida por getCardImg() -->
+      <!-- (error) muestra una imagen por defecto si la URL falla -->
       <img [src]="getCardImg(carta.image)" (error)="onImgError($event)"
            class="img-fluid rounded shadow" style="max-width: 300px;" />
     </div>
 
+  
     <div class="col-md-8">
-      <h2>{{carta.name}}</h2>
-      <p class="text-muted">{{carta.id}}</p>
 
-      <table class="table table-bordered">
+      <!-- Cabecera: nombre de la carta e ID como badge -->
+      <div class="d-flex justify-content-between align-items-center">
+        <h2>{{carta.name}}</h2>
+        <span class="badge bg-secondary">{{carta.id}}</span>
+      </div>
+
+      <!-- Tabla de características básicas -->
+      <table class="table table-sm table-hover mt-3">
         <tbody>
           <tr *ngIf="carta.hp">
-            <th>HP</th><td>{{ carta.hp }}</td>
+            <th class="w-25">HP</th>
+            <td>{{ carta.hp }}</td>
           </tr>
           <tr *ngIf="carta.types?.length">
-            <th>Tipo</th><td>{{carta.types.join(', ')}}</td>
+            <th>Tipo</th>
+            <td>{{carta.types.join(', ')}}</td>
           </tr>
           <tr *ngIf="carta.rarity">
-            <th>Rareza</th><td>{{carta.rarity}}</td>
-          </tr>
-          <tr *ngIf="carta.illustrator">
-            <th>Ilustrador</th><td>{{carta.illustrator}}</td>
+            <th>Rareza</th>
+            <td>{{carta.rarity}}</td>
           </tr>
           <tr *ngIf="carta.pricing?.cardmarket?.trend">
-            <th>Precio (trend)</th><td>{{carta.pricing.cardmarket.trend}} €</td>
+            <th>Precio Mercado</th>
+            <td>{{carta.pricing.cardmarket.trend}} €</td>
           </tr>
         </tbody>
       </table>
 
-      <button class="btn mt-2"[ngClass]="enColeccion ? 'btn-danger' : 'btn-success'" (click)="toggleColeccion()">{{ enColeccion ? 'Quitar de colección' : 'Añadir a colección' }}</button>
-      <div *ngIf="carta.attacks?.length" class="mt-4">
-  <h4>Ataques</h4>
-  <div class="row g-3">
-    <div class="col-md-6" *ngFor="let atk of carta.attacks">
-      <div class="card h-100 border-0 shadow-sm">
+      
+      <div *ngIf="carta.attacks?.length" class="card shadow-sm border-primary mt-4">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">Análisis de Poder de Ataque</h5>
+        </div>
         <div class="card-body">
-          <h6 class="card-title mb-1">{{ atk.name }}</h6>
-          <p class="text-muted small mb-2">
-            <strong>Coste:</strong> {{ atk.cost?.join(', ') || '-' }}
-          </p>
-          <p class="mb-1">
-            <strong>Daño:</strong> {{ atk.damage || '-' }}
-          </p>
-          <p class="text-muted small mb-0">{{ atk.effect || '-' }}</p>
+          <div style="display: block; height: 250px;">
+            
+            <canvas baseChart
+              [data]="barChartData"
+              [options]="barChartOptions"
+              [type]="barChartType">
+            </canvas>
+          </div>
         </div>
       </div>
-    </div>
-  </div>
-</div>
+
+
+      <div *ngIf="carta.attacks?.length" class="mt-4">
+        <h4>Habilidades Especiales</h4>
+
+        <!-- Grid de tarjetas: 2 columnas en pantallas medianas -->
+        <div class="row g-3">
+
+          <!-- *ngFor crea una tarjeta por cada ataque de la carta -->
+          <div class="col-md-6" *ngFor="let atk of carta.attacks">
+            <div class="card h-100 border-0 bg-light shadow-sm">
+              <div class="card-body">
+
+                <!-- Nombre del ataque -->
+                <h6 class="card-title fw-bold">{{ atk.name }}</h6>
+
+                <div class="d-flex justify-content-between">
+                 
+                  <small>Coste: {{ atk.cost?.join(', ') || '-' }}</small>
+
+                  <!-- Daño del ataque como badge rojo -->
+                 
+                  <span class="badge bg-danger">Daño: {{ atk.damage || '0' }}</span>
+                </div>
+
+                <!-- Descripción del efecto especial del ataque -->
+                <p class="text-muted small mt-2 mb-0 italic">
+                  {{ atk.effect || 'Sin efecto especial.' }}
+                </p>
+
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
 
     </div>
   </div>

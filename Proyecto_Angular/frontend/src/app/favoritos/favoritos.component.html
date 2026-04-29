@@ -1,0 +1,38 @@
+<div class="container mt-4">
+  <h2 class="mb-4">Mis favoritos</h2>
+  
+  <div *ngIf="misFavoritos.length > 0; else empty" class="table-responsive">
+    <table class="table table-hover align-middle shadow-sm">
+      <thead class="table-dark">
+        <tr>
+          <th>Miniatura</th>
+          <th>Nombre</th>
+          <th>ID</th>
+          <th>Precio</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let fav of misFavoritos">
+          <td><img [src]="fav.imagen" width="60" class="rounded shadow-xs"></td>
+          <td class="fw-bold">{{ fav.nombre }}</td>
+          <td><code>{{ fav.carta_id }}</code></td>
+          <td class="text-success fw-bold">{{ fav.precio | currency:'EUR' }}</td>
+          <td>
+            <button class="btn btn-danger btn-sm" (click)="eliminar(fav.id)">
+              Borrar
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <ng-template #empty>
+    <div class="alert alert-light border text-center p-5">
+      <h4>No hay cartas guardadas</h4>
+      <p>Ve al buscador y añade cartas a tu colección.</p>
+      <button routerLink="/busqueda" class="btn btn-primary">Ir a buscar</button>
+    </div>
+  </ng-template>
+</div>
